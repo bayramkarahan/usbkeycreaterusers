@@ -10,7 +10,7 @@ CONFIG -= app_bundle
 CONFIG += link_pkgconfig
 #DEFINES += LINK_LIBUDEV
 PKGCONFIG += libudev
-
+PKGCONFIG += libcrypt
 PKGCONFIG += libcrypto
 PKGCONFIG += libssl
 
@@ -44,6 +44,9 @@ DISTFILES +=usb-mount.service\
             setmountusbdisklink.desktop \
             setmountusbdisklink.sh \
             command.conf
+
+HEADERS += \
+    user.h
 
 
 

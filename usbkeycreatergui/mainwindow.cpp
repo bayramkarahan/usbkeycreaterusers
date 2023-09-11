@@ -20,8 +20,8 @@ MainWindow::MainWindow(QWidget *parent)
      QRect screenGeometry = QApplication::desktop()->screenGeometry();
       boy=screenGeometry.height()/100;
 
-    setFixedWidth(boy*50);
-    setFixedHeight(boy*20);
+    setFixedWidth(boy*80);
+    setFixedHeight(boy*30);
     setWindowTitle("Usb Anahtar Oluşturucu");
 
     int x = (screenGeometry.width()/2 - this->width()/2);
@@ -36,32 +36,50 @@ MainWindow::MainWindow(QWidget *parent)
 
     QComboBox * disk = new QComboBox(widget);
     disk->addItems(diskList());
-    disk->setFixedSize(boy*30,boy*3.9);
+    disk->setFixedSize(boy*45,boy*3.9);
 
+    username = new QLineEdit(widget);
+    username->setFixedSize(boy*33,boy*3.9);
+    username->setText("");
+
+    QLabel *labelusername=new QLabel(widget);
+    labelusername->setText("Kullanıcı Adı");
+    labelusername->setFixedSize(boy*35,boy*3.9);
+    QLabel *labelusername1=new QLabel(widget);
+    labelusername1->setText("Tüm Tahtalar Tek Kullanıcı Oluşturarak Kullanılabilir.Örn: ebaqr");
+    labelusername1->setFixedSize(boy*78,boy*7);
 
     QPushButton *refreshButton=new QPushButton(widget);
     refreshButton->setText("Yenile");
-    refreshButton->setFixedSize(boy*18,boy*3.9);
+    refreshButton->setFixedSize(boy*33,boy*3.9);
 
     connect(refreshButton, &QPushButton::clicked, [=]() {
         disk->clear();
      disk->addItems(diskList());
-        //QByteArray hashData = QCryptographicHash::hash("bayram", QCryptographicHash::Md5);
+        //QByteArray hashData = QCryptographicHash::hash("example", QCryptographicHash::Md5);
         //qDebug() << hashData.toHex();
     });
     QLabel *baslik=new QLabel(widget);
     baslik->setText("  Disk Listesi");
-    baslik->setFixedSize(boy*30,boy*3.9);
+    baslik->setFixedSize(boy*78,boy*3.9);
 
    durum=new QLabel(widget);
-   durum->setFixedSize(boy*48,boy*3.9);
+   durum->setFixedSize(boy*78,boy*3.9);
 
     QPushButton *keycreatButton=new QPushButton(widget);
-    keycreatButton->setFixedSize(boy*48,boy*3.9);
+    keycreatButton->setFixedSize(boy*78,boy*3.9);
 
     keycreatButton->setText("Anahtar Oluştur");
     connect(keycreatButton, &QPushButton::clicked, [=]() {
-        keyCreateToDisk(disk->currentText());
+        if(disk->currentText()=="/"||disk->currentText()=="") {
+            durum->setText("Usb Disk Seçiniz!");
+            return;
+        }
+        if(username->text()=="") {
+            durum->setText("Kullanıcı Adı Giriniz!");
+            return;
+        }
+        keyCreateToDisk(disk->currentText(),username->text());
         //udevList();
     });
 
@@ -71,15 +89,19 @@ MainWindow::MainWindow(QWidget *parent)
     mainlayout->setAlignment(Qt::AlignCenter);
     // mainlayout->setRowStretch(2,1);
     // mainlayout->setColumnStretch(2,1);
-    mainlayout->setContentsMargins(0,0,0,5);
-    mainlayout->setMargin(0);
+   // mainlayout->setContentsMargins(0,2,0,2);
+    mainlayout->setMargin(3);
     mainlayout->setSpacing(0);
 
-    mainlayout->addWidget(baslik, 4,0,1,1);
-    mainlayout->addWidget(disk,5,0,1,1);
-    mainlayout->addWidget(refreshButton, 5,1,1,1);
-    mainlayout->addWidget(keycreatButton, 6,0,1,2);
-    mainlayout->addWidget(durum, 7,0,1,2);
+    mainlayout->addWidget(baslik, 4,0,1,2,Qt::AlignCenter);
+    mainlayout->addWidget(disk,5,0,1,1,Qt::AlignLeft);
+    mainlayout->addWidget(refreshButton, 5,1,1,1,Qt::AlignLeft);
+    mainlayout->addWidget(labelusername,6,0,1,1,Qt::AlignLeft);
+    mainlayout->addWidget(username, 6,1,1,1,Qt::AlignLeft);
+
+    mainlayout->addWidget(labelusername1, 8,0,1,2,Qt::AlignLeft);
+    mainlayout->addWidget(keycreatButton, 9,0,1,2,Qt::AlignCenter);
+    mainlayout->addWidget(durum, 10,0,1,2,Qt::AlignCenter);
 
 
 }
@@ -89,7 +111,7 @@ int MainWindow::udevList()
     return 0;
 
 }
-void MainWindow::keyCreateToDisk(QString diskname)
+void MainWindow::keyCreateToDisk(QString diskname,QString username)
 {
     QStringList dlist;
     foreach (const QStorageInfo &storage, QStorageInfo::mountedVolumes()) {
@@ -121,20 +143,22 @@ void MainWindow::keyCreateToDisk(QString diskname)
                       // qDebug()<<"Sonuç:"<<result;
 
                       // qDebug()<<"seçilen disk"<<diskname<<storage.device()<<storage.rootPath();
-
+                    QString pass=result.left(6);
                     QByteArray hashData = QCryptographicHash::hash(result.toStdString().c_str(), QCryptographicHash::Md5);
+                    QByteArray hashusername = QCryptographicHash::hash(username.toStdString().c_str(), QCryptographicHash::Md5);
+                    QByteArray hashpass = QCryptographicHash::hash(pass.toStdString().c_str(), QCryptographicHash::Md5);
 
                     ///qDebug() << hashData.toHex();
                         QString dosya=storage.rootPath()+"/.ebaqr";
                         QFile file(dosya.toStdString().c_str());
                           file.open(QIODevice::WriteOnly | QIODevice::Text);
                            QTextStream out(&file);
-                           out << hashData.toHex()+"\n";
+                           out << hashData.toHex()+"|"+username+"|"+hashusername.toHex()+"\n";
 
                            // optional, as QFile destructor will already do it:
                            file.close();
 
-                             durum->setText("Disk Hazırlandı.");
+                             durum->setText("Disk Hazırlandı. Parolanız: "+hashpass.toHex().left(6));
 
                    }
                 }

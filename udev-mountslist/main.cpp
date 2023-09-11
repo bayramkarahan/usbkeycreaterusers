@@ -20,6 +20,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <openssl/md5.h>
+#include <iostream>
+#include <sstream>
+#include <vector>
+#include<user.h>
 // g++ udev-mountslist -ludev -lcrypto -lssl
 
 using namespace std;
@@ -125,8 +129,19 @@ if (mounts.is_open()) {
   return std::nullopt;
 }
 /******************************************************************************************/
+std::vector<std::string> split (const std::string &s, char delim) {
+    std::vector<std::string> result;
+    std::stringstream ss (s);
+    std::string item;
+
+    while (getline (ss, item, delim)) {
+        result.push_back (item);
+    }
+
+    return result;
+}
 /*************************************md5 cmp**************************************/
-bool exist_md5(std::string mountpoint,std::string_view md5kod)
+std::string  exist_md5(std::string mountpoint,std::string md5kod)
 {
 mountpoint.append("/.ebaqr");
 
@@ -138,20 +153,29 @@ if (file.is_open()) {
     while (std::getline(file, line)) {
 
     std::istringstream iss(line);
+    const auto satir=std::string(line);
 
   //  getline(iss, device, ' ');
   //  getline(iss, mountpoint, ' ');
   //  getline(iss, type, ' ');
-         if (line == md5kod)
+    // std::cout << "bilgiler!" <<line<<md5kod<<'\n';
+    if (satir.find(md5kod) != std::string::npos) {
+        //std::cout << "Bulundu!" <<line<<'\n';
+        return line;
+    }
+
+       /*  if (line== md5kod)
          {
             //std::cout << "kod var açılabilir "<< std::endl;
             return true;
-         }
+         }*/
+
     }
     file.close();
+    return "";
 }
 
-  return false;
+
 }
 /******************************************************************************************/
 /*************************************qrpsw cmp**************************************/
@@ -276,14 +300,16 @@ int main(int argc, char *argv[]){
                     system("umount /media/usbkeydisk");
 
                     system("mkdir /media/usbkeydisk");
+
                     std::string komut="mount ";
                     komut.append(udev_device_get_devnode(dev));
                     komut.append(" /media/usbkeydisk");
 
-                    //printf("komut: %s",komut.c_str());
+                    printf("komut: %s\n",komut.c_str());
                     //std::cout <<"komut:"<<komut<< "\n";
+
                     system(komut.c_str());
-                    printf("disk bağlandı..");
+                    printf("disk bağlandı..\n");
                 }
                 if( strcmp(udev_device_get_action(dev),"remove")==0 )
                 {
@@ -310,30 +336,104 @@ int main(int argc, char *argv[]){
                 /********************************disk bağlandımı*****************************/
                 if( strcmp(udev_device_get_action(dev),"add")==0&&(disk_add_drm==true&&login_status==false) )
                 {
+                     printf("Disk Bilgisi Okunuyor...\n");
                     disk_add_drm=false;
                     auto sserial=udev_device_get_property_value(dev, "ID_SERIAL_SHORT");
                     /********************************md5*****************************************************/
                     auto md5kod = str2md5(sserial, strlen(sserial));
+                    printf("hata2 disk bağlandı..\n");
                     /******************************************disk bağlantı noktası öğrenme erişme kod kontrolü**************/
                     if (const auto point = get_device_of_mount_point(udev_device_get_devnode(dev)))
                     {
+
                         // std::cout << *point << "\n";
-                        bool durum=exist_md5(*point,md5kod);//disk içindeki md5 kontrol ediliyor
-                        //durum==true dosya var ve md5 doğruysa login yap
-                        if(durum)
+                        std::vector<std::string> diskbilgilist;
+                       std::string  diskbilgi=exist_md5(*point,md5kod);//disk içindeki md5 kontrol ediliyor
+                    //printf("disk Bilgi: %s",diskbilgi.c_str());
+
+                    if (diskbilgi.size()>0)
+                          {
+
+                        diskbilgilist = split (diskbilgi, '|');
+                        // printf("Dosya İçeriği Bilgisi: %s %i",diskbilgi.c_str(),diskbilgilist.size());
+                         if(diskbilgilist.size()<2) continue;
+                    }
+                    printf("İşlemler başlıyor..\n");
+
+                       std::string kod=diskbilgilist.at(0);
+                       std::string username=diskbilgilist.at(1);
+
+
+                        //printf("Okunan Disk Bilgisi kod: %s\n",diskbilgilist.at(0).c_str());
+                        //printf("Okunan Disk Bilgisi username: %s\n",diskbilgilist.at(1).c_str());
+
+                        if(kod==md5kod)
                         {
+
+                            printf("Disk Kodu ve Dosyaki Kod Aynı Sorun yok\n");
+                            char* un =strdup(username.c_str());
+
+                            if(user_exist(un))
+                           {
+                             printf("Kullanıcı sistemde var\n");
+                             printf("username:%s\n",username.c_str());
+                             std::string seri=sserial;
+                             std::string id = seri.substr (0,6);
+                            // printf("id:%s\n",id.c_str());
+                             char* cpass = const_cast<char*>(id.c_str());
+                             char* cusername = const_cast<char*>(username.c_str());
+                             std::string komut="/usr/bin/sshlogin ";
+
+                             if(username=="ebaqr")
+                             {
+                             std::string qrpsw=get_qrpsw();
+                             komut.append("ebaqr ");
+                             komut.append(qrpsw);
+                             }
+                             else
+                             {
+                                 komut.append(cusername);
+                                 komut.append(" ");
+                                 komut.append(cpass);
+                             }
+
+                             printf("açılış komutu: %s \n",komut.c_str());
+                              system(komut.c_str());
+                           }
+                           else
+                           {
+                               printf("Kullanıcı sistemde yok\n");
+                               printf("username:%s\n",username.c_str());
+                               std::string seri=sserial;
+                               std::string id = seri.substr (0,6);
+                               printf("id:%s\n",id.c_str());
+
+                               user_t err;
+                               char* cpass = const_cast<char*>(id.c_str());
+                               char* cusername = const_cast<char*>(username.c_str());
+                               user_add(&err,cusername,cpass,true);
+                               /***************************************/
+                               std::string yol="/home/"+username+"/.config/np";
+                               std::ofstream o(yol.c_str());
+                               o << "\n" << std::endl;
+                               /***************************************/
+                               std::string komut="/usr/bin/sshlogin ";
+                               komut.append(cusername);
+                               komut.append(" ");
+                               komut.append(cpass);
+
+                               printf("açılış komutu: %s \n",komut.c_str());
+                               system(komut.c_str());
+
+                           }
+
                             login_status=true;
                             login_serial=sserial;
-                            std::string qrpsw=get_qrpsw();
-                            //std::cout <<"login yapılabilir disk uygun"<<qrpsw<< "\n";
-                            std::string komut="/usr/bin/sshlogin ebaqr ";
-                            komut.append(qrpsw);
-                            //printf("komut: %s",komut.c_str());
-                            //std::cout <<"komut:"<<komut<< "\n";
-                            system(komut.c_str());
-                            //system("ln -s /media/usbkeydisk /ortak-alan");
+
 
                         }
+
+
                     }
                     /****************************************************************************************************/
 

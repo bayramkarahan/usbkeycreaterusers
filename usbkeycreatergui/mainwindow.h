@@ -17,7 +17,7 @@
 #include <string.h>
 #include <cctype>
 #include <unistd.h>
-
+#include<QLineEdit>
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -32,12 +32,12 @@ public:
 public slots:
     bool  removableDisk(QString disk);
     QStringList diskList();
-    void keyCreateToDisk(QString diskname);
+    void keyCreateToDisk(QString diskname, QString username);
     int udevList();
 private:
        QGridLayout *mainlayout;
         QLabel *durum;
 int boy;
-
+QLineEdit * username;
 };
 #endif // MAINWINDOW_H
