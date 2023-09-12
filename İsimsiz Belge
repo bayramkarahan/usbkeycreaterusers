@@ -1,6 +1,0 @@
-flash oluşturulurken 
-kullanıcı md5 kodu üretilip eklenecek (kullanıcı değiştirildiğinde kontrol için)
-şifresi gösterilmeli
-
-kullanıcı oluşturlurken skel dizini ayarlanmalı
-kullanıcı şifre sormasın diye kullanıcıya pw dosyası eklenecek

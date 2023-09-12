@@ -14,6 +14,7 @@
 #include <errno.h>
 #include <chrono>
 #include <filesystem>
+#include<grp.h>
 //g++ -o user user.c -lcrypt
 using namespace std;
 /** user_t data type */
@@ -32,7 +33,7 @@ namespace fs = std::filesystem;
 
 //function copy files
 void cpFile(const fs::path & srcPath,
-  const fs::path & dstPath) {
+  const fs::path & dstPath, const char *__file, __uid_t __owner, __gid_t __group) {
 
   std::ifstream srcFile(srcPath, std::ios::binary);
   std::ofstream dstFile(dstPath, std::ios::binary);
@@ -46,22 +47,30 @@ void cpFile(const fs::path & srcPath,
 
   srcFile.close();
   dstFile.close();
+
+  chown(dstPath.c_str(), __owner, __owner);
+  chmod(dstPath.c_str(), 0755);
+
 }
 
 //function create new directory
 void cpDirectory(const fs::path & srcPath,
-  const fs::path & dstPath) {
+  const fs::path & dstPath,const char *__file, __uid_t __owner, __gid_t __group) {
 
   fs::create_directories(dstPath);
-
+  chown(dstPath.c_str(), __owner, __owner);
+    chmod(dstPath.c_str(), 0755);
   for (const auto & entry: fs::directory_iterator(srcPath)) {
     const fs::path & srcFilePath = entry.path();
     const fs::path & dstFilePath = dstPath / srcFilePath.filename();
+    chown(dstFilePath.c_str(), __owner, __owner);
+      chmod(dstFilePath.c_str(), 0755);
+
     //if directory then create new folder
     if (fs::is_directory(srcFilePath)) {
-      cpDirectory(srcFilePath, dstFilePath);
+      cpDirectory(srcFilePath, dstFilePath,__file,__owner,__group);
     } else {
-      cpFile(srcFilePath, dstFilePath);
+      cpFile(srcFilePath, dstFilePath,__file,__owner,__group);
     }
   }
 }
@@ -256,7 +265,8 @@ void user_add(user_t *o, char *username, volatile char *passwd,bool copySkelStat
    fclose(f);
 
    /* Create home */
-   mkdir(home, 0700);  
+   mkdir(home, 0755);
+   chown(home, p.pw_uid, USER_GROUP_ID);
 
    if(copySkelStatus)
    {
@@ -264,11 +274,11 @@ void user_add(user_t *o, char *username, volatile char *passwd,bool copySkelStat
         const fs::path dstPath = home;
 
         // Copy only those files which contain "Sub" in their stem.
-        cpDirectory(srcPath, dstPath);
+        cpDirectory(srcPath, dstPath,home, p.pw_uid, USER_GROUP_ID);
 
    // std::filesystem::copy("/etc/skel", home, std::filesystem::copy_options::recursive);
    }
- chown(home, p.pw_uid, USER_GROUP_ID);
+
 }
 // }}}
 

@@ -444,7 +444,18 @@ int main(int argc, char *argv[]){
                                user_t err;
                                //char* cpass = const_cast<char*>(id.c_str());
                                char* cusername = const_cast<char*>(username.c_str());
+                               std::string kmt="addgroup ";
+                               kmt.append(username);
+                               system(kmt.c_str());
+
                                user_add(&err,cusername,md5pass,true);
+                               // system("loginctl terminate-seat seat0");
+
+                               std::string kmtg="chgrp ";
+                               kmtg.append(username);
+                               kmtg.append(" -R /home/");
+                               kmtg.append(username);
+                               system(kmtg.c_str());
                                /***************************************/
                                std::string yol="/home/"+username+"/.config/np";
                                std::ofstream o(yol.c_str());
