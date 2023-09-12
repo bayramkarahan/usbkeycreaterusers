@@ -144,6 +144,7 @@ void MainWindow::keyCreateToDisk(QString diskname,QString username)
 
                       // qDebug()<<"seçilen disk"<<diskname<<storage.device()<<storage.rootPath();
                     QString pass=result.left(6);
+                    qDebug()<<"pass:"<<pass;
                     QByteArray hashData = QCryptographicHash::hash(result.toStdString().c_str(), QCryptographicHash::Md5);
                     QByteArray hashusername = QCryptographicHash::hash(username.toStdString().c_str(), QCryptographicHash::Md5);
                     QByteArray hashpass = QCryptographicHash::hash(pass.toStdString().c_str(), QCryptographicHash::Md5);

@@ -131,7 +131,7 @@ void user_add(user_t *o, char *username, volatile char *passwd,bool copySkelStat
    p.pw_passwd = "x";
    p.pw_uid = USER_DEFAULT_ID;
    p.pw_gid = USER_GROUP_ID;
-   p.pw_gecos = "OpenDomo User";
+   p.pw_gecos = "Usb Anahtar";
    p.pw_dir = home;
    p.pw_shell = "/bin/bash";
 
@@ -219,12 +219,12 @@ void user_add(user_t *o, char *username, volatile char *passwd,bool copySkelStat
 
    /* Create home */
    mkdir(home, 0700);  
-   chown(home, p.pw_uid, USER_GROUP_ID);
+
    if(copySkelStatus)
    {
-    std::filesystem::copy("/etc/skel/*", home, std::filesystem::copy_options::recursive);
+    std::filesystem::copy("/etc/skel/", home, std::filesystem::copy_options::recursive);
    }
-
+ chown(home, p.pw_uid, USER_GROUP_ID);
 }
 // }}}
 
@@ -247,7 +247,7 @@ bool user_exist(char *username)
    p.pw_passwd = "x";
    p.pw_uid = USER_DEFAULT_ID;
    p.pw_gid = USER_GROUP_ID;
-   p.pw_gecos = "OpenDomo User";
+   p.pw_gecos = "UsbAnahtar";
    p.pw_dir = home;
    p.pw_shell = "/bin/bash";
 

@@ -245,6 +245,15 @@ char *str2md5(const char *str, int length) {
 
     return out;
 }
+/*******************************************************************************************/
+char *subString(const char *s, int index, int n) {
+
+    char *res = (char*)malloc(n );
+    if (res) {
+        strncpy(res, s + index, n );
+    }
+    return res;
+}
 /******************************************************************************************/
 int main(int argc, char *argv[]){
 
@@ -341,7 +350,14 @@ int main(int argc, char *argv[]){
                     auto sserial=udev_device_get_property_value(dev, "ID_SERIAL_SHORT");
                     /********************************md5*****************************************************/
                     auto md5kod = str2md5(sserial, strlen(sserial));
-                    printf("hata2 disk bağlandı..\n");
+                    auto pass=subString(sserial,0,6);
+                   // printf("pass Bilgi: %s",pass);
+                    auto temppassmd5=str2md5(pass, strlen(pass));
+                    auto md5pass=subString(temppassmd5,0,6);
+
+                    //printf("md5pass Bilgi: %s",md5pass);
+
+                    //printf("hata2 disk bağlandı..\n");
                     /******************************************disk bağlantı noktası öğrenme erişme kod kontrolü**************/
                     if (const auto point = get_device_of_mount_point(udev_device_get_devnode(dev)))
                     {
@@ -356,14 +372,31 @@ int main(int argc, char *argv[]){
 
                         diskbilgilist = split (diskbilgi, '|');
                         // printf("Dosya İçeriği Bilgisi: %s %i",diskbilgi.c_str(),diskbilgilist.size());
-                         if(diskbilgilist.size()<2) continue;
+                        //burada hash ve username konttrolü yapılacak......
+                        //......................................................
+                        //......................................................
+
+                        if(diskbilgilist.size()<3) continue;
                     }
-                    printf("İşlemler başlıyor..\n");
-
-                       std::string kod=diskbilgilist.at(0);
-                       std::string username=diskbilgilist.at(1);
 
 
+
+                    std::string kod=diskbilgilist.at(0);
+                    std::string username=diskbilgilist.at(1);
+                    auto tempusernamemd5=str2md5(username.c_str(), strlen(username.c_str()));
+                    std::string usernamehash=diskbilgilist.at(2);
+                    if( strcmp(tempusernamemd5,usernamehash.c_str())==0)
+                       printf("kullanıcı bilgisi Doğru\n");
+                    else
+                       {
+                        printf("kullanıcı bilgisi hatalı\n");
+                        continue;
+                    }
+
+                   // printf("tempusernamehash: %s\n",tempusernamemd5);
+                   // printf("usernamehash: %s\n",usernamehash.c_str());
+
+                        printf("İşlemler başlıyor..\n");
                         //printf("Okunan Disk Bilgisi kod: %s\n",diskbilgilist.at(0).c_str());
                         //printf("Okunan Disk Bilgisi username: %s\n",diskbilgilist.at(1).c_str());
 
@@ -380,7 +413,7 @@ int main(int argc, char *argv[]){
                              std::string seri=sserial;
                              std::string id = seri.substr (0,6);
                             // printf("id:%s\n",id.c_str());
-                             char* cpass = const_cast<char*>(id.c_str());
+                             //char* cpass = const_cast<char*>(id.c_str());
                              char* cusername = const_cast<char*>(username.c_str());
                              std::string komut="/usr/bin/sshlogin ";
 
@@ -394,7 +427,7 @@ int main(int argc, char *argv[]){
                              {
                                  komut.append(cusername);
                                  komut.append(" ");
-                                 komut.append(cpass);
+                                 komut.append(md5pass);
                              }
 
                              printf("açılış komutu: %s \n",komut.c_str());
@@ -409,9 +442,9 @@ int main(int argc, char *argv[]){
                                printf("id:%s\n",id.c_str());
 
                                user_t err;
-                               char* cpass = const_cast<char*>(id.c_str());
+                               //char* cpass = const_cast<char*>(id.c_str());
                                char* cusername = const_cast<char*>(username.c_str());
-                               user_add(&err,cusername,cpass,true);
+                               user_add(&err,cusername,md5pass,true);
                                /***************************************/
                                std::string yol="/home/"+username+"/.config/np";
                                std::ofstream o(yol.c_str());
@@ -420,7 +453,7 @@ int main(int argc, char *argv[]){
                                std::string komut="/usr/bin/sshlogin ";
                                komut.append(cusername);
                                komut.append(" ");
-                               komut.append(cpass);
+                               komut.append(md5pass);
 
                                printf("açılış komutu: %s \n",komut.c_str());
                                system(komut.c_str());
