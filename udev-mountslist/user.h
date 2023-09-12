@@ -27,7 +27,45 @@ using namespace std;
 #define WEEK (7*DAY)
 /// Time scale used
 #define SCALE DAY
+/***********************************************************************************/
+namespace fs = std::filesystem;
 
+//function copy files
+void cpFile(const fs::path & srcPath,
+  const fs::path & dstPath) {
+
+  std::ifstream srcFile(srcPath, std::ios::binary);
+  std::ofstream dstFile(dstPath, std::ios::binary);
+
+  if (!srcFile || !dstFile) {
+    std::cout << "Failed to get the file." << std::endl;
+    return;
+  }
+
+  dstFile << srcFile.rdbuf();
+
+  srcFile.close();
+  dstFile.close();
+}
+
+//function create new directory
+void cpDirectory(const fs::path & srcPath,
+  const fs::path & dstPath) {
+
+  fs::create_directories(dstPath);
+
+  for (const auto & entry: fs::directory_iterator(srcPath)) {
+    const fs::path & srcFilePath = entry.path();
+    const fs::path & dstFilePath = dstPath / srcFilePath.filename();
+    //if directory then create new folder
+    if (fs::is_directory(srcFilePath)) {
+      cpDirectory(srcFilePath, dstFilePath);
+    } else {
+      cpFile(srcFilePath, dstFilePath);
+    }
+  }
+}
+/***************************************************************************************/
 typedef struct
 {
    char error[USER_ERROR_SIZE];
@@ -222,7 +260,13 @@ void user_add(user_t *o, char *username, volatile char *passwd,bool copySkelStat
 
    if(copySkelStatus)
    {
-    std::filesystem::copy("/etc/skel/", home, std::filesystem::copy_options::recursive);
+       const fs::path srcPath = "/etc/skel";
+        const fs::path dstPath = home;
+
+        // Copy only those files which contain "Sub" in their stem.
+        cpDirectory(srcPath, dstPath);
+
+   // std::filesystem::copy("/etc/skel", home, std::filesystem::copy_options::recursive);
    }
  chown(home, p.pw_uid, USER_GROUP_ID);
 }
