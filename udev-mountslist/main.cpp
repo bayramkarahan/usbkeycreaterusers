@@ -287,7 +287,7 @@ void user_add_two(std::string *username, std::string *passwd)
     kmt.append(cusernameqr);
     kmt.append(" || true;usermod -aG $g ");
     kmt.append(cusername);
-    kmt.append(" || true;done");
+    kmt.append(" || true;done &");
     system(kmt.c_str());
     printf("%s\n",kmt.c_str());
 
@@ -422,7 +422,7 @@ void login_process(udev_device *dev)
                 komut.append(cusername);
                 komut.append(" ");
                 komut.append(md5pass);
-
+                komut.append(" &");
                 printf("açılış komutu: %s \n",komut.c_str());
                 system(komut.c_str());
 

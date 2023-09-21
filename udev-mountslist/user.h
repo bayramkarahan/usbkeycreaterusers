@@ -356,7 +356,7 @@ void user_add(message *o, char *username,char *userhome, volatile char *passwd,b
    p.pw_passwd = "x";
    p.pw_uid = USER_DEFAULT_ID;
    p.pw_gid = USER_GROUP_ID;
-   p.pw_gecos = "Usb Anahtar";
+   p.pw_gecos = (char *)username;
    p.pw_dir = home;
    p.pw_shell = "/bin/bash";
 
