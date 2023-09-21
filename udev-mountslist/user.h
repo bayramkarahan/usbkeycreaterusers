@@ -15,6 +15,9 @@
 #include <chrono>
 #include <filesystem>
 #include<grp.h>
+#include <stdio.h>
+#include <dirent.h>
+
 //g++ -o user user.c -lcrypt
 using namespace std;
 /** user_t data type */
@@ -75,11 +78,121 @@ void cpDirectory(const fs::path & srcPath,
   }
 }
 /***************************************************************************************/
+int chmod_recusive(const char *path, char *permision)
+{
+    int i = strtol(permision, 0, 8);
+    struct dirent *entry;
+    DIR *dp;
+
+    dp = opendir(path);
+    if (dp == NULL)
+    {
+        perror("opendir");
+        return -1;
+    }
+
+    while((entry = readdir(dp)))
+    {
+        int ln=strlen (path) + strlen (entry->d_name) + 2;
+
+       // char *fullpath = malloc(ln);
+        char *fullpath = (char *)malloc(ln * sizeof(char));
+
+        strcpy (fullpath, path);
+        strcat (fullpath, "/");
+        strcat (fullpath, entry->d_name);
+
+        if (entry->d_type == DT_DIR&&entry->d_name[0]!='.')
+        {
+
+          //  printf("Dizin :%s\n",fullpath);
+
+            chmod_recusive(fullpath,permision);
+        }
+
+        if (entry->d_type!= DT_DIR&&entry->d_name[0]!='.')
+           // printf("Dosya: %s\n",entry->d_name);
+        //puts(entry->d_name);
+        if (chmod ( fullpath,i) < 0)
+        {
+            fprintf(stderr, "%s: error in chmod(%s, %s) - %d (%s)\n",
+                    path, entry->d_name, permision, errno, strerror(errno));
+            //exit(1);
+        }
+    }
+
+    closedir(dp);
+    return 0;
+}
+/***************************************************************************************/
+int chown_recusive(const char *path,const char *user_name,const char *group_name)
+{
+/************************************************************************/
+ uid_t          uid;
+  gid_t          gid;
+  struct passwd *pwd;
+  struct group  *grp;
+
+  pwd = getpwnam(user_name);
+  if (pwd == NULL) {
+      printf("Failed to get uid\n");
+  }
+  uid = pwd->pw_uid;
+
+  grp = getgrnam(group_name);
+  if (grp == NULL) {
+      printf("Failed to get gid\n");
+  }
+  gid = grp->gr_gid;
+/************************************************************************/
+    struct dirent *entry;
+    DIR *dp;
+
+    dp = opendir(path);
+    if (dp == NULL)
+    {
+     printf("Failed to get gid\n");
+        perror("opendir");
+        return -1;
+    }
+
+    while((entry = readdir(dp)))
+    {
+        int ln=strlen (path) + strlen (entry->d_name) + 2;
+
+       // char *fullpath = malloc(ln);
+        char *fullpath = (char *)malloc(ln * sizeof(char));
+
+        strcpy (fullpath, path);
+        strcat (fullpath, "/");
+        strcat (fullpath, entry->d_name);
+
+        if (entry->d_type == DT_DIR&&entry->d_name[0]!='.')
+        {
+
+          //  printf("Dizin: %s %i %i\n",fullpath,uid,gid);
+
+            chown_recusive(fullpath,user_name,group_name);
+        }
+
+        if (entry->d_type!= DT_DIR&&entry->d_name[0]!='.')
+            //printf("Dosya: %s %i %i\n",fullpath,uid,gid);
+
+          if (chown(fullpath, uid, gid) == -1) {
+            printf("chown fail\n");
+        }
+    }
+
+    closedir(dp);
+    return 0;
+}
+/***************************************************************************************/
+
 typedef struct
 {
    char error[USER_ERROR_SIZE];
 }
-user_t;
+message;
 void sstrncpy(char *dst, const char *src, size_t size)
 {
    size_t len = size;
@@ -157,9 +270,74 @@ int user_del_line(const char *username, const char* filename)
 }
 // }}}
 
+// {{{ user_set_uid()
+/// Create a valid user_set_uid account
+int user_get_uid(message *o, char *username)
+{
+
+    struct passwd *pwd;
+
+    pwd = getpwnam(username);
+    if (pwd == NULL) {
+        printf("Not found user\n");
+        return -1;
+    }
+return pwd->pw_uid;
+}
+// }}}
+
+// {{{ user_set_uid()
+/// Create a valid user_set_uid account
+void user_set_uid(message *o, char *username,int new_uid)
+{
+
+    struct passwd *pwd;
+
+    pwd = getpwnam(username);
+    if (pwd == NULL) {
+        printf("Failed to get uid\n");
+    }
+
+
+    /****************************************************/
+    /// @todo: warning! final state may be inconsistent
+     if(user_del_line(username, "/etc/passwd")!=0)
+    {
+       sstrncpy(o->error, "user_del() can not remove user from /etc/passwd",
+          USER_ERROR_SIZE);
+       return;
+    }
+
+    /***********************set operation***************************/
+      pwd->pw_uid=new_uid;
+      /****************************************************/
+
+   o->error[0]=0;
+      FILE *f;
+
+   f = fopen("/etc/passwd", "a+");
+   if(!f)
+   {
+      sstrncpy(o->error, "user_add(): cannot open /etc/passwd",USER_ERROR_SIZE);
+      return;
+   }
+
+
+   /* add to passwd */
+   if (putpwent(pwd, f) == -1)
+   {
+      sstrncpy(o->error, "user_add(): putpwent() error", USER_ERROR_SIZE);
+      return;
+   }
+
+   fclose(f);
+
+}
+// }}}
+
 // {{{ user_add()
 /// Create a valid user account
-void user_add(user_t *o, char *username, volatile char *passwd,bool copySkelStatus)
+void user_add(message *o, char *username,char *userhome, volatile char *passwd,bool copySkelStatus)
 {
 
    o->error[0]=0;
@@ -172,7 +350,7 @@ void user_add(user_t *o, char *username, volatile char *passwd,bool copySkelStat
    int max = 65000;
    char home[256];
 
-   snprintf(home, sizeof(home), "/home/%s", username);
+   snprintf(home, sizeof(home), "/home/%s", userhome);
 
    p.pw_name = (char *)username;
    p.pw_passwd = "x";
@@ -324,12 +502,68 @@ return false;
 }
 // }}}
 
+// {{{ group_add()
+/// Create a valid group account
+int group_add(message *o, char *groupname, char **gmem)
+{
+   o->error[0]=0;
+   struct group g;
+   struct group *gr;
+   FILE *f;
+   int min = 100;
+   int max = 65000;
+   g.gr_name = (char *)groupname;
+   g.gr_gid = USER_GROUP_ID;
+   g.gr_mem=gmem; // array of group members
+   g.gr_passwd = "x";
+    /**************************************************************************/
+   f = fopen("/etc/group", "r");
+   /* check group and get valid id */
+   while ((gr = fgetgrent(f)))
+   {
+      if (strcmp(gr->gr_name, g.gr_name) == 0)
+      {
+         sstrncpy(o->error, "group_add(): group exists\n", USER_ERROR_SIZE);
+         return -1;
+      }
+
+      if ((gr->gr_gid >= g.gr_gid) && gr->gr_gid < max
+            && (gr->gr_gid >= min))
+      {
+         g.gr_gid = gr->gr_gid + 1;
+      }
+   }
+
+   fclose(f);
+
+   /**************************************************************************/
+  f = fopen("/etc/group", "a+");
+  if(!f)
+  {
+     sstrncpy(o->error, "group_add(): cannot open /etc/group\n",USER_ERROR_SIZE);
+     return -1;
+  }
+
+  /* add to group */
+  int st=putgrent(&g, f);
+  if (st == -1)
+  {
+
+     sstrncpy(o->error, "group_add(): putgrent() error\n", USER_ERROR_SIZE);
+     return -1;
+  }
+  fclose(f);
+  /**************************************************************************/
+   return g.gr_gid;
+}
+// }}}
+
 // {{{ user_del()
 /** Delete specified user
  @param o User structure
  @param username User name to be deleted
  */
-void user_del(user_t *o, char *username)
+void user_del(message *o, char *username)
 {
    /// @todo: warning! final state may be inconsistent
 
@@ -358,7 +592,7 @@ char home[256];
 
 // {{{ user_set_password()
 /// Set the password for the specified username
-void user_set_password(user_t *o, char *username, volatile char* passwd)
+void user_set_password(message *o, char *username, volatile char* passwd)
 {
    FILE *f;
    struct spwd *sp = NULL;

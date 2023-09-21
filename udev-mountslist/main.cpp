@@ -172,9 +172,9 @@ if (file.is_open()) {
 
     }
     file.close();
-    return "";
-}
 
+}
+return "";
 
 }
 /******************************************************************************************/
@@ -253,6 +253,191 @@ char *subString(const char *s, int index, int n) {
         strncpy(res, s + index, n );
     }
     return res;
+}
+/******************************************************************************************/
+void user_add_two(std::string *username, std::string *passwd)
+{
+    message err;
+    char* cpass = const_cast<char*>(passwd->c_str());
+    char* cusername = const_cast<char*>(username->c_str());
+
+    char* cpassqr = const_cast<char*>(username->c_str());
+    std::string usernameqr;    usernameqr.append(username->c_str()); usernameqr.append("-qr");
+    char* cusernameqr = const_cast<char*>(usernameqr.c_str());
+    printf("kallanıcı 1 %s şifre: %s\n",cusername,cpass);
+    printf("kallanıcı 1 %s şifre: %s\n",cusernameqr,cpassqr);
+
+    /*****************************************************************/
+    char *mems[]={cusername,NULL};
+    group_add(&err, cusername, mems);
+    user_add(&err,cusername,cusername,cpass,true);
+    user_add(&err,cusernameqr,cusername,cpass,false);
+    char home[256];
+    snprintf(home, sizeof(home), "/home/%s", cusername);
+    chown_recusive(home,cusername,cusername); //chown $user -R /home/$user
+    chmod_recusive(home,"755");// chmod 755 /home/$user
+    int a=user_get_uid(&err,cusername); //uida=$(grep "^$user:" /etc/passwd | cut -f 3 -d ":")
+   // int b=user_get_uid(&err,cusernameqr); //uidb=$(grep "^$user-qr:" /etc/passwd | cut -f 3 -d ":")
+    user_set_uid(&err,cusernameqr,a);// sed -i "s/:$uidb:/:$uida:/g" /etc/passwd
+   // for g in floppy audio video plugdev netdev $user; do usermod -aG $g $user-qr || true;usermod -aG $g $user || true;done
+
+    std::string kmt="for g in cdrom floppy audio dip video plugdev netdev bluetooth lpadmin scanner ";
+    kmt.append(cusername);
+    kmt.append("; do usermod -aG $g ");
+    kmt.append(cusernameqr);
+    kmt.append(" || true;usermod -aG $g ");
+    kmt.append(cusername);
+    kmt.append(" || true;done");
+    system(kmt.c_str());
+    printf("%s\n",kmt.c_str());
+
+
+    //
+    /*
+     //
+     std::string kmt="addgroup ";
+     kmt.append(username);
+     system(kmt.c_str());
+
+     user_add(&err,cusername,md5pass,true);
+     // system("loginctl terminate-seat seat0");
+
+     std::string kmtg="chgrp ";
+     kmtg.append(username);
+     kmtg.append(" -R /home/");
+     kmtg.append(username);
+     system(kmtg.c_str());
+*/
+}
+void login_process(udev_device *dev)
+{
+    printf("Disk Bilgisi Okunuyor...\n");
+    disk_add_drm=false;
+    auto sserial=udev_device_get_property_value(dev, "ID_SERIAL_SHORT");
+    /********************************md5*****************************************************/
+    auto md5kod = str2md5(sserial, strlen(sserial));
+    auto pass=subString(sserial,0,6);
+    // printf("pass Bilgi: %s",pass);
+    auto temppassmd5=str2md5(pass, strlen(pass));
+    char *md5pass=subString(temppassmd5,0,6);
+    //printf("md5pass Bilgi: %s",md5pass);
+    /************disk bağlantı noktası öğrenme erişme kod kontrolü**************/
+    if (const auto point = get_device_of_mount_point(udev_device_get_devnode(dev)))
+    {
+        std::cout <<"point: "<< *point << "\n";
+        std::vector<std::string> diskbilgilist;
+        std::string  diskbilgi=exist_md5(*point,md5kod);//disk içindeki md5 kontrol ediliyor
+       // printf("disk Bilgi: %s\n",diskbilgi.c_str());
+
+        if (diskbilgi.length()>0)
+        {
+            diskbilgilist = split (diskbilgi, '|');
+            // printf("Dosya İçeriği Bilgisi: %s %i",diskbilgi.c_str(),diskbilgilist.size());
+            //burada hash ve username konttrolü yapılacak......
+            //......................................................
+            //......................................................
+
+            if(diskbilgilist.size()<3) return;
+
+        }else
+        {
+            printf("Dosya Bulunamadı *****..\n");
+            return;
+        }
+
+        std::string kod=diskbilgilist.at(0);
+        std::string username=diskbilgilist.at(1);
+        auto tempusernamemd5=str2md5(username.c_str(), strlen(username.c_str()));
+        std::string usernamehash=diskbilgilist.at(2);
+        if( strcmp(tempusernamemd5,usernamehash.c_str())==0)
+            printf("kullanıcı bilgisi Doğru\n");
+        else
+        {
+            printf("kullanıcı bilgisi hatalı\n");
+            return;
+        }
+
+        // printf("tempusernamehash: %s\n",tempusernamemd5);
+        // printf("usernamehash: %s\n",usernamehash.c_str());
+
+        printf("İşlemler başlıyor..\n");
+        //printf("Okunan Disk Bilgisi kod: %s\n",diskbilgilist.at(0).c_str());
+        //printf("Okunan Disk Bilgisi username: %s\n",diskbilgilist.at(1).c_str());
+
+        if(kod==md5kod)
+        {
+
+            printf("Disk Kodu ve Dosyaki Kod Aynı Sorun yok\n");
+            char* un =strdup(username.c_str());
+
+            if(user_exist(un))
+            {
+                printf("Kullanıcı sistemde var\n");
+                printf("username:%s\n",username.c_str());
+                std::string seri=sserial;
+                std::string id = seri.substr (0,6);
+                // printf("id:%s\n",id.c_str());
+                //char* cpass = const_cast<char*>(id.c_str());
+                char* cusername = const_cast<char*>(username.c_str());
+                std::string komut="/usr/bin/sshlogin ";
+
+                if(username=="ebaqr")
+                {
+                    std::string qrpsw=get_qrpsw();
+                    komut.append("ebaqr ");
+                    komut.append(qrpsw);
+                }
+                else
+                {
+                    komut.append(cusername);
+                    komut.append(" ");
+                    komut.append(md5pass);
+                }
+
+                printf("açılış komutu: %s \n",komut.c_str());
+                system(komut.c_str());
+            }
+            else
+            {
+                printf("Kullanıcı sistemde yok\n");
+                printf("username:%s\n",username.c_str());
+                std::string seri=sserial;
+                std::string id = seri.substr (0,6);
+                printf("id:%s\n",id.c_str());
+                //char* cpass = const_cast<char*>(md5pass.c_str());
+                char* cusername = const_cast<char*>(username.c_str());
+
+                std::string pss;
+                pss.append(md5pass);
+
+                user_add_two(&username,&pss);
+
+
+                /*****************şifre sormasın diye dosya oluşturuluyor************/
+                std::string yol="/home/"+username+"/.config/np";
+                std::ofstream o(yol.c_str());
+                o << "\n" << std::endl;
+                /*******************************************************************/
+                std::string komut="/usr/bin/sshlogin ";
+                komut.append(cusername);
+                komut.append(" ");
+                komut.append(md5pass);
+
+                printf("açılış komutu: %s \n",komut.c_str());
+                system(komut.c_str());
+
+            }
+
+            login_status=true;
+            login_serial=sserial;
+
+
+        }
+
+
+    }
+    /****************************************************************************************************/
+
 }
 /******************************************************************************************/
 int main(int argc, char *argv[]){
@@ -345,142 +530,7 @@ int main(int argc, char *argv[]){
                 /********************************disk bağlandımı*****************************/
                 if( strcmp(udev_device_get_action(dev),"add")==0&&(disk_add_drm==true&&login_status==false) )
                 {
-                     printf("Disk Bilgisi Okunuyor...\n");
-                    disk_add_drm=false;
-                    auto sserial=udev_device_get_property_value(dev, "ID_SERIAL_SHORT");
-                    /********************************md5*****************************************************/
-                    auto md5kod = str2md5(sserial, strlen(sserial));
-                    auto pass=subString(sserial,0,6);
-                   // printf("pass Bilgi: %s",pass);
-                    auto temppassmd5=str2md5(pass, strlen(pass));
-                    auto md5pass=subString(temppassmd5,0,6);
-
-                    //printf("md5pass Bilgi: %s",md5pass);
-
-                    //printf("hata2 disk bağlandı..\n");
-                    /******************************************disk bağlantı noktası öğrenme erişme kod kontrolü**************/
-                    if (const auto point = get_device_of_mount_point(udev_device_get_devnode(dev)))
-                    {
-
-                        // std::cout << *point << "\n";
-                        std::vector<std::string> diskbilgilist;
-                       std::string  diskbilgi=exist_md5(*point,md5kod);//disk içindeki md5 kontrol ediliyor
-                    //printf("disk Bilgi: %s",diskbilgi.c_str());
-
-                    if (diskbilgi.size()>0)
-                          {
-
-                        diskbilgilist = split (diskbilgi, '|');
-                        // printf("Dosya İçeriği Bilgisi: %s %i",diskbilgi.c_str(),diskbilgilist.size());
-                        //burada hash ve username konttrolü yapılacak......
-                        //......................................................
-                        //......................................................
-
-                        if(diskbilgilist.size()<3) continue;
-                    }
-
-
-
-                    std::string kod=diskbilgilist.at(0);
-                    std::string username=diskbilgilist.at(1);
-                    auto tempusernamemd5=str2md5(username.c_str(), strlen(username.c_str()));
-                    std::string usernamehash=diskbilgilist.at(2);
-                    if( strcmp(tempusernamemd5,usernamehash.c_str())==0)
-                       printf("kullanıcı bilgisi Doğru\n");
-                    else
-                       {
-                        printf("kullanıcı bilgisi hatalı\n");
-                        continue;
-                    }
-
-                   // printf("tempusernamehash: %s\n",tempusernamemd5);
-                   // printf("usernamehash: %s\n",usernamehash.c_str());
-
-                        printf("İşlemler başlıyor..\n");
-                        //printf("Okunan Disk Bilgisi kod: %s\n",diskbilgilist.at(0).c_str());
-                        //printf("Okunan Disk Bilgisi username: %s\n",diskbilgilist.at(1).c_str());
-
-                        if(kod==md5kod)
-                        {
-
-                            printf("Disk Kodu ve Dosyaki Kod Aynı Sorun yok\n");
-                            char* un =strdup(username.c_str());
-
-                            if(user_exist(un))
-                           {
-                             printf("Kullanıcı sistemde var\n");
-                             printf("username:%s\n",username.c_str());
-                             std::string seri=sserial;
-                             std::string id = seri.substr (0,6);
-                            // printf("id:%s\n",id.c_str());
-                             //char* cpass = const_cast<char*>(id.c_str());
-                             char* cusername = const_cast<char*>(username.c_str());
-                             std::string komut="/usr/bin/sshlogin ";
-
-                             if(username=="ebaqr")
-                             {
-                             std::string qrpsw=get_qrpsw();
-                             komut.append("ebaqr ");
-                             komut.append(qrpsw);
-                             }
-                             else
-                             {
-                                 komut.append(cusername);
-                                 komut.append(" ");
-                                 komut.append(md5pass);
-                             }
-
-                             printf("açılış komutu: %s \n",komut.c_str());
-                              system(komut.c_str());
-                           }
-                           else
-                           {
-                               printf("Kullanıcı sistemde yok\n");
-                               printf("username:%s\n",username.c_str());
-                               std::string seri=sserial;
-                               std::string id = seri.substr (0,6);
-                               printf("id:%s\n",id.c_str());
-
-                               user_t err;
-                               //char* cpass = const_cast<char*>(id.c_str());
-                               char* cusername = const_cast<char*>(username.c_str());
-                               std::string kmt="addgroup ";
-                               kmt.append(username);
-                               system(kmt.c_str());
-
-                               user_add(&err,cusername,md5pass,true);
-                               // system("loginctl terminate-seat seat0");
-
-                               std::string kmtg="chgrp ";
-                               kmtg.append(username);
-                               kmtg.append(" -R /home/");
-                               kmtg.append(username);
-                               system(kmtg.c_str());
-                               /***************************************/
-                               std::string yol="/home/"+username+"/.config/np";
-                               std::ofstream o(yol.c_str());
-                               o << "\n" << std::endl;
-                               /***************************************/
-                               std::string komut="/usr/bin/sshlogin ";
-                               komut.append(cusername);
-                               komut.append(" ");
-                               komut.append(md5pass);
-
-                               printf("açılış komutu: %s \n",komut.c_str());
-                               system(komut.c_str());
-
-                           }
-
-                            login_status=true;
-                            login_serial=sserial;
-
-
-                        }
-
-
-                    }
-                    /****************************************************************************************************/
-
+                    login_process(dev);
 
                 }
 
@@ -489,7 +539,9 @@ int main(int argc, char *argv[]){
             else {
                 printf("No Device from receive_device(). An error occured.\n");
             }
+
         }
+        //printf("Usb taranıyor...\n");
         usleep(250*1000);
         fflush(stdout);
     }

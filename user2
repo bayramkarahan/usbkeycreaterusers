@@ -1,0 +1,17 @@
+#!/bin/bash
+user="tht"
+defpass="$user"
+pass="$user"
+
+if [ ! -d /home/$user ] ; then
+            useradd -m $user -s /bin/bash -p $(openssl passwd "$defpass") -U -d /home/$user
+            useradd $user-qr -s /bin/bash -p $(openssl passwd "$pass") -d /home/$user
+            mkdir -p /home/$user
+            chown $user -R /home/$user
+            chmod 755 /home/$user
+            uida=$(grep "^$user:" /etc/passwd | cut -f 3 -d ":")
+            uidb=$(grep "^$user-qr:" /etc/passwd | cut -f 3 -d ":")
+            sed -i "s/:$uidb:/:$uida:/g" /etc/passwd
+            for g in floppy audio video plugdev netdev $user; do usermod -aG $g $user-qr || true;usermod -aG $g $user || true;done
+           # usermod $user-qr -p $(openssl passwd -6 "$pass")
+       fi
