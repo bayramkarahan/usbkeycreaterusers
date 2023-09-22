@@ -171,15 +171,19 @@ int chown_recusive(const char *path,const char *user_name,const char *group_name
         {
 
           //  printf("Dizin: %s %i %i\n",fullpath,uid,gid);
-
+            if (chown(fullpath, uid, gid) == -1) {
+              printf("chown fail\n");
+          }
             chown_recusive(fullpath,user_name,group_name);
         }
 
         if (entry->d_type!= DT_DIR&&entry->d_name[0]!='.')
+        {
             //printf("Dosya: %s %i %i\n",fullpath,uid,gid);
 
           if (chown(fullpath, uid, gid) == -1) {
             printf("chown fail\n");
+        }
         }
     }
 
