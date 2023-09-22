@@ -10,10 +10,10 @@ Kurulum için deb paketini indirip kurununuz.
 
 Aşağıdaki aşamaları sırasıyla uygulayarak usb disk hazırlanabilir.
 
-<img src="https://github.com/bayramkarahan/usbkeycreater/blob/master/1.png" width="600" height="600" />
-<img src="https://github.com/bayramkarahan/usbkeycreater/blob/master/2.png" width="600" height="600" />
-<img src="https://github.com/bayramkarahan/usbkeycreater/blob/master/3.png" width="600" height="600" />
-<img src="https://github.com/bayramkarahan/usbkeycreater/blob/master/4.png" width="600" height="600" />
+<img src="1.png" width="600" height="600" />
+<img src="2.png" width="600" height="600" />
+<img src="3.png" width="600" height="600" />
+<img src="4.png" width="600" height="600" />
 
 Disk hazırlandı mesajını aldığınızda usb diskiniz hazırlanmıştır.
 

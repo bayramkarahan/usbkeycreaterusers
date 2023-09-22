@@ -270,8 +270,8 @@ void user_add_two(std::string *username, std::string *passwd)
     /*****************************************************************/
     char *mems[]={cusername,NULL};
     group_add(&err, cusername, mems);
-    user_add(&err,cusername,cusername,cpass,true);
-    user_add(&err,cusernameqr,cusername,cpass,false);
+    user_add(&err,cusername,cusername,cusername,true);//user
+    user_add(&err,cusernameqr,cusername,cpass,false);//user-qr
     char home[256];
     snprintf(home, sizeof(home), "/home/%s", cusername);
     chown_recusive(home,cusername,cusername); //chown $user -R /home/$user
@@ -346,9 +346,10 @@ void login_process(udev_device *dev)
         }
 
         std::string kod=diskbilgilist.at(0);
-        std::string username=diskbilgilist.at(1);
+        std::string username=diskbilgilist.at(1);username.append("-qr");
         auto tempusernamemd5=str2md5(username.c_str(), strlen(username.c_str()));
         std::string usernamehash=diskbilgilist.at(2);
+
         if( strcmp(tempusernamemd5,usernamehash.c_str())==0)
             printf("kullanıcı bilgisi Doğru\n");
         else
@@ -368,6 +369,7 @@ void login_process(udev_device *dev)
         {
 
             printf("Disk Kodu ve Dosyaki Kod Aynı Sorun yok\n");
+
             char* un =strdup(username.c_str());
 
             if(user_exist(un))
@@ -390,6 +392,7 @@ void login_process(udev_device *dev)
                 else
                 {
                     komut.append(cusername);
+                    komut.append("-qr");
                     komut.append(" ");
                     komut.append(md5pass);
                 }
@@ -417,9 +420,11 @@ void login_process(udev_device *dev)
                 std::string yol="/home/"+username+"/.config/np";
                 std::ofstream o(yol.c_str());
                 o << "\n" << std::endl;
+
                 /*******************************************************************/
                 std::string komut="/usr/bin/sshlogin ";
                 komut.append(cusername);
+                 komut.append("-qr");
                 komut.append(" ");
                 komut.append(md5pass);
                 komut.append(" &");
