@@ -346,7 +346,7 @@ void login_process(udev_device *dev)
         }
 
         std::string kod=diskbilgilist.at(0);
-        std::string username=diskbilgilist.at(1);username.append("-qr");
+        std::string username=diskbilgilist.at(1);
         auto tempusernamemd5=str2md5(username.c_str(), strlen(username.c_str()));
         std::string usernamehash=diskbilgilist.at(2);
 
