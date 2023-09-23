@@ -91,34 +91,45 @@ int chmod_recusive(const char *path, char *permision)
         return -1;
     }
 
+    /**************************************************/
+    if (chmod ( path,i) < 0)
+    {
+        fprintf(stderr, " error in chmod(%s, %s) - %d (%s)\n",
+                entry->d_name, permision, errno, strerror(errno));
+        //exit(1);
+    }
+    /*************************************************/
     while((entry = readdir(dp)))
     {
         int ln=strlen (path) + strlen (entry->d_name) + 2;
 
-       // char *fullpath = malloc(ln);
+        // char *fullpath = malloc(ln);
         char *fullpath = (char *)malloc(ln * sizeof(char));
 
         strcpy (fullpath, path);
         strcat (fullpath, "/");
         strcat (fullpath, entry->d_name);
 
-        if (entry->d_type == DT_DIR&&entry->d_name[0]!='.')
+        if (entry->d_type == DT_DIR)
         {
-
-          //  printf("Dizin :%s\n",fullpath);
-
-            chmod_recusive(fullpath,permision);
+            if(entry->d_name[0]=='.'&&entry->d_name[1]=='.')continue;
+            if(entry->d_name[0]=='.'&&entry->d_name[1]==NULL)continue;
+            //  printf("Dizin :%s\n",fullpath);
+          chmod_recusive(fullpath,permision);
         }
 
-        if (entry->d_type!= DT_DIR&&entry->d_name[0]!='.')
-           // printf("Dosya: %s\n",entry->d_name);
-        //puts(entry->d_name);
-        if (chmod ( fullpath,i) < 0)
+        if (entry->d_type!= DT_DIR)
         {
-            fprintf(stderr, "%s: error in chmod(%s, %s) - %d (%s)\n",
-                    path, entry->d_name, permision, errno, strerror(errno));
-            //exit(1);
+            // printf("Dosya: %s\n",entry->d_name);
+            //puts(entry->d_name);
+            if (chmod ( fullpath,i) < 0)
+            {
+                fprintf(stderr, "%s: error in chmod(%s, %s) - %d (%s)\n",
+                        path, entry->d_name, permision, errno, strerror(errno));
+                //exit(1);
+            }
         }
+
     }
 
     closedir(dp);
@@ -127,6 +138,7 @@ int chmod_recusive(const char *path, char *permision)
 /***************************************************************************************/
 int chown_recusive(const char *path,const char *user_name,const char *group_name)
 {
+
 /************************************************************************/
  uid_t          uid;
   gid_t          gid;
@@ -145,6 +157,10 @@ int chown_recusive(const char *path,const char *user_name,const char *group_name
   }
   gid = grp->gr_gid;
 /************************************************************************/
+  if (chown(path, uid, gid) == -1) {
+    printf("chown fail\n");
+}
+/********************************************************************/
     struct dirent *entry;
     DIR *dp;
 
@@ -167,24 +183,23 @@ int chown_recusive(const char *path,const char *user_name,const char *group_name
         strcat (fullpath, "/");
         strcat (fullpath, entry->d_name);
 
-        if (entry->d_type == DT_DIR&&entry->d_name[0]!='.')
+        if (entry->d_type == DT_DIR)
         {
-
-          //  printf("Dizin: %s %i %i\n",fullpath,uid,gid);
-            if (chown(fullpath, uid, gid) == -1) {
-              printf("chown fail\n");
-          }
-            chown_recusive(fullpath,user_name,group_name);
+            if(entry->d_name[0]=='.'&&entry->d_name[1]=='.')continue;
+            if(entry->d_name[0]=='.'&&entry->d_name[1]==NULL)continue;
+           // printf("Dizin: %s %s %i %i\n",entry->d_name,fullpath,uid,gid);
+           chown_recusive(fullpath,user_name,group_name);
         }
 
-        if (entry->d_type!= DT_DIR&&entry->d_name[0]!='.')
+        if (entry->d_type!= DT_DIR)
         {
-            //printf("Dosya: %s %i %i\n",fullpath,uid,gid);
+           // printf("Dosya: %s %s %i %i\n",entry->d_name,fullpath,uid,gid);
 
           if (chown(fullpath, uid, gid) == -1) {
             printf("chown fail\n");
         }
-        }
+
+    }
     }
 
     closedir(dp);
@@ -341,7 +356,7 @@ void user_set_uid(message *o, char *username,int new_uid)
 
 // {{{ user_add()
 /// Create a valid user account
-void user_add(message *o, char *username,char *userhome, volatile char *passwd,bool copySkelStatus)
+void user_add(message *o, char *username,char *userhome,unsigned int _gid, volatile char *passwd,bool copySkelStatus)
 {
 
    o->error[0]=0;
@@ -360,6 +375,7 @@ void user_add(message *o, char *username,char *userhome, volatile char *passwd,b
    p.pw_passwd = "x";
    p.pw_uid = USER_DEFAULT_ID;
    p.pw_gid = USER_GROUP_ID;
+   p.pw_gid=_gid;
    p.pw_gecos = (char *)username;
    p.pw_dir = home;
    p.pw_shell = "/bin/bash";

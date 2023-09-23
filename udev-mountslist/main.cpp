@@ -268,10 +268,11 @@ void user_add_two(std::string *username, std::string *passwd)
     printf("kallanıcı 1 %s şifre: %s\n",cusernameqr,cpassqr);
 
     /*****************************************************************/
-    char *mems[]={cusername,NULL};
-    group_add(&err, cusername, mems);
-    user_add(&err,cusername,cusername,cusername,true);//user
-    user_add(&err,cusernameqr,cusername,cpass,false);//user-qr
+    char *mems[]={cusername,cusernameqr,NULL};
+    int _gid=group_add(&err, cusername, mems);
+    user_add(&err,cusername,cusername,_gid,cusername,true);//user
+    user_add(&err,cusernameqr,cusername,_gid,cpass,false);//user-qr
+
     char home[256];
     snprintf(home, sizeof(home), "/home/%s", cusername);
     chown_recusive(home,cusername,cusername); //chown $user -R /home/$user
