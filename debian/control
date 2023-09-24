@@ -16,7 +16,8 @@ Build-Depends: debhelper (>= 9),
     libstdc++6,
     libudev-dev,
     libcrypt-dev,
-    libssl-dev
+    libssl-dev,
+    libcurl
 Standards-Version: 3.9.8
 Homepage: http://bayramkarahanblogspot.com
 
@@ -33,5 +34,6 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
 	libqt5widgets5,
     	libudev-dev,
     	libcrypt-dev,
-    	libssl-dev
+    	libssl-dev,
+    	libcurl
 Description: Usb Anahtar Uygulaması
