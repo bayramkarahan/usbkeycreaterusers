@@ -33,9 +33,8 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
     	libqt5widgets5,
     	libstdc++6,
 	libqt5widgets5,
-    	libudev-dev,
-    	libcrypt-dev,
-    	libssl-dev,
-    	libcurl4-gnutls-dev,
-    	libcurl4-openssl-dev
+    	libudev,
+    	libcrypt,
+    	libssl,
+    	libcurl4
 Description: Usb Anahtar Uygulaması
