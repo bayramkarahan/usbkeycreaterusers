@@ -24,6 +24,8 @@
 #include <sstream>
 #include <vector>
 #include<user.h>
+#include <curl/curl.h>
+
 // g++ udev-mountslist -ludev -lcrypto -lssl
 
 using namespace std;
@@ -310,6 +312,40 @@ void user_add_two(std::string *username, std::string *passwd)
      system(kmtg.c_str());
 */
 }
+int login_curl(std::string data)
+{
+  CURL *curl;
+  CURLcode res;
+  CURLoption co;
+ // std::string data;
+ //    printf("curl data: %s\n",data.c_str());
+  /* In windows, this will init the winsock stuff */
+  curl_global_init(CURL_GLOBAL_ALL);
+
+  /* get a curl handle */
+  curl = curl_easy_init();
+  if(curl) {
+    /* First set the URL that is about to receive our POST. This URL can
+       just as well be an https:// URL if that is what should receive the
+       data. */
+    curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8080");
+    /* Now specify the POST data */
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS,data.c_str());
+
+    /* Perform the request, res will get the return code */
+    res = curl_easy_perform(curl);
+    /* Check for errors */
+    if(res != CURLE_OK)
+      fprintf(stderr, "curl_easy_perform() failed: %s\n",
+              curl_easy_strerror(res));
+
+    /* always cleanup */
+    curl_easy_cleanup(curl);
+  }
+  curl_global_cleanup();
+  return 0;
+}
+
 void login_process(udev_device *dev)
 {
     printf("Disk Bilgisi Okunuyor...\n");
@@ -382,26 +418,35 @@ void login_process(udev_device *dev)
                 // printf("id:%s\n",id.c_str());
                 //char* cpass = const_cast<char*>(id.c_str());
                 char* cusername = const_cast<char*>(username.c_str());
-                std::string komut="/usr/bin/sshlogin ";
-
+               // std::string komut="/usr/bin/sshlogin ";
+                std::string curldata="username=";
                 if(username=="ebaqr")
                 {
                     std::string qrpsw=get_qrpsw();
-                    komut.append("ebaqr ");
-                    komut.append(qrpsw);
+                   /* komut.append("ebaqr ");
+                    komut.append(qrpsw);*/
+                    curldata.append("ebaqr&password=");
+                    curldata.append(qrpsw);
                 }
                 else
                 {
-                    komut.append(cusername);
+                   /* komut.append(cusername);
                     komut.append("-qr");
                     komut.append(" ");
-                    komut.append(md5pass);
+                    komut.append(md5pass);*/
+                    curldata.append(cusername);
+                    curldata.append("-qr&password=");
+                    curldata.append(md5pass);
+
 
                 }
-                komut.append(" &");
-                printf("açılış komutu: %s \n",komut.c_str());
-                system(komut.c_str());
-               // system("umount /media/usbkeydisk &");
+                //komut.append(" &");
+                //printf("açılış komutu: %s \n",komut.c_str());
+                //printf("açılış komutu: %s \n",curldata.c_str());
+
+                //system(komut.c_str());
+
+              login_curl(curldata);
             }
             else
             {
@@ -425,15 +470,21 @@ void login_process(udev_device *dev)
                 o << "\n" << std::endl;
 
                 /*******************************************************************/
-                std::string komut="/usr/bin/sshlogin ";
+                /*std::string komut="/usr/bin/sshlogin ";
                 komut.append(cusername);
                  komut.append("-qr");
                 komut.append(" ");
                 komut.append(md5pass);
                 komut.append(" &");
                 printf("açılış komutu: %s \n",komut.c_str());
-                system(komut.c_str());
-              // system("umount /media/usbkeydisk &");
+                system(komut.c_str());*/
+                std::string curldata="username=";
+                curldata.append(cusername);
+                curldata.append("-qr&password=");
+                curldata.append(md5pass);
+
+                 login_curl(curldata);
+
             }
 
             login_status=true;

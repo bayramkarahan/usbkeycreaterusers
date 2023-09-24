@@ -13,6 +13,7 @@ PKGCONFIG += libudev
 PKGCONFIG += libcrypt
 PKGCONFIG += libcrypto
 PKGCONFIG += libssl
+PKGCONFIG += libcurl
 
 TARGET = udev-mountslist
 # Default rules for deployment.
