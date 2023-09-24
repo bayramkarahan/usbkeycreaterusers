@@ -396,10 +396,12 @@ void login_process(udev_device *dev)
                     komut.append("-qr");
                     komut.append(" ");
                     komut.append(md5pass);
-                }
 
+                }
+                komut.append(" &");
                 printf("açılış komutu: %s \n",komut.c_str());
                 system(komut.c_str());
+               // system("umount /media/usbkeydisk &");
             }
             else
             {
@@ -431,7 +433,7 @@ void login_process(udev_device *dev)
                 komut.append(" &");
                 printf("açılış komutu: %s \n",komut.c_str());
                 system(komut.c_str());
-
+              // system("umount /media/usbkeydisk &");
             }
 
             login_status=true;
@@ -440,6 +442,8 @@ void login_process(udev_device *dev)
 
         }
 
+////işlem bittikten sonra  umount yapılıyor
+///
 
     }
     /****************************************************************************************************/
@@ -528,6 +532,12 @@ int main(int argc, char *argv[]){
                         printf("oturum açılan disk umount yapıldı");
                         //usb disk çıkartıldığında çalışacak komut çalıştırılıyor...
             //system("loginctl terminate-seat seat0");
+
+                        printf("-----------------------------------------------------------------\n");
+                        printf("remove umount yapıldı\n");
+                        printf("-----------------------------------------------------------------\n");
+                        system("umount /media/usbkeydisk&");
+
             system(get_umountdisk_command().c_str());
 
                     }
@@ -538,8 +548,22 @@ int main(int argc, char *argv[]){
                 {
                     login_process(dev);
 
+                    printf("-----------------------------------------------------------------\n");
+                    printf("add umount yapıldı\n");
+                    printf("-----------------------------------------------------------------\n");
+                    system("umount /media/usbkeydisk&");
+
                 }
 
+                if( strcmp(udev_device_get_action(dev),"change")==0 && strcmp(udev_device_get_devtype(dev),"partition")==0)
+                {
+
+                    printf("-----------------------------------------------------------------\n");
+                    printf("change umount yapıldı\n");
+                    printf("-----------------------------------------------------------------\n");
+                    system("umount /media/usbkeydisk&");
+
+                }
                 udev_device_unref(dev);
             }
             else {
@@ -548,6 +572,7 @@ int main(int argc, char *argv[]){
 
         }
         //printf("Usb taranıyor...\n");
+
         usleep(250*1000);
         fflush(stdout);
     }
