@@ -266,8 +266,8 @@ void user_add_two(std::string *username, std::string *passwd)
     char* cpassqr = const_cast<char*>(username->c_str());
     std::string usernameqr;    usernameqr.append(username->c_str()); usernameqr.append("-qr");
     char* cusernameqr = const_cast<char*>(usernameqr.c_str());
-    printf("kallanıcı 1 %s şifre: %s\n",cusername,cpass);
-    printf("kallanıcı 1 %s şifre: %s\n",cusernameqr,cpassqr);
+   // printf("kallanıcı 1 %s şifre: %s\n",cusername,cpass);
+   // printf("kallanıcı 1 %s şifre: %s\n",cusernameqr,cpassqr);
 
     /*****************************************************************/
     char *mems[]={cusername,cusernameqr,NULL};
@@ -292,7 +292,7 @@ void user_add_two(std::string *username, std::string *passwd)
     kmt.append(cusername);
     kmt.append(" || true;done &");
     system(kmt.c_str());
-    printf("%s\n",kmt.c_str());
+   // printf("%s\n",kmt.c_str());
 
 
     //
@@ -462,7 +462,7 @@ void login_process(udev_device *dev)
                 pss.append(md5pass);
 
                 user_add_two(&username,&pss);
-
+                system("systemctl restart lightdm.service");
 
                 /*****************şifre sormasın diye dosya oluşturuluyor************/
                 std::string yol="/home/"+username+"/.config/np";
