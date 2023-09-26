@@ -462,7 +462,7 @@ void login_process(udev_device *dev)
                 pss.append(md5pass);
 
                 user_add_two(&username,&pss);
-                system("systemctl restart lightdm.service");
+               // system("systemctl restart lightdm.service");
 
                 /*****************şifre sormasın diye dosya oluşturuluyor************/
                 std::string yol="/home/"+username+"/.config/np";
