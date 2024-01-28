@@ -1,0 +1,2 @@
+/etc/systemd/system/udev-mountslist.service
+/etc/xdg/autostart/setmountusbdisklink.desktop

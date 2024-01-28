@@ -345,7 +345,29 @@ int login_curl(std::string data)
   curl_global_cleanup();
   return 0;
 }
+void login(std::string username, std::string passwd)
+{
 
+
+
+// ****** web login with curl
+    std::string curldata="username=";
+     curldata.append(username);
+     curldata.append("&password=");
+     curldata.append(passwd);
+    //  printf("curldata açılış komutu: %s \n",curldata.c_str());
+     login_curl(curldata);
+//******* ssh login
+   /* std::string komut=" /usr/bin/sshlogin ";
+                komut.append(username);
+                // komut.append("-qr");
+                komut.append(" ");
+                komut.append(passwd);
+                komut.append(" &");
+               // printf("sshlogin açılış komutu: %s \n",komut.c_str());
+             //  system(komut.c_str());
+*/
+}
 void login_process(udev_device *dev)
 {
     printf("Disk Bilgisi Okunuyor...\n");
@@ -419,14 +441,15 @@ void login_process(udev_device *dev)
                 //char* cpass = const_cast<char*>(id.c_str());
                 char* cusername = const_cast<char*>(username.c_str());
                // std::string komut="/usr/bin/sshlogin ";
-                std::string curldata="username=";
+                ///std::string curldata="username=";
                 if(username=="ebaqr")
                 {
                     std::string qrpsw=get_qrpsw();
                    /* komut.append("ebaqr ");
                     komut.append(qrpsw);*/
-                    curldata.append("ebaqr&password=");
-                    curldata.append(qrpsw);
+                    ///curldata.append("ebaqr&password=");
+                    ///curldata.append(qrpsw);
+                    login(username,qrpsw);
                 }
                 else
                 {
@@ -434,10 +457,11 @@ void login_process(udev_device *dev)
                     komut.append("-qr");
                     komut.append(" ");
                     komut.append(md5pass);*/
-                    curldata.append(cusername);
-                    curldata.append("-qr&password=");
-                    curldata.append(md5pass);
-
+                   /// curldata.append(cusername);
+                   /// curldata.append("-qr&password=");
+                   /// curldata.append(md5pass);
+                    username.append("-qr");
+                    login(username,md5pass);
 
                 }
                 //komut.append(" &");
@@ -446,7 +470,7 @@ void login_process(udev_device *dev)
 
                 //system(komut.c_str());
 
-              login_curl(curldata);
+              ///login_curl(curldata);
             }
             else
             {
@@ -478,12 +502,13 @@ void login_process(udev_device *dev)
                 komut.append(" &");
                 printf("açılış komutu: %s \n",komut.c_str());
                 system(komut.c_str());*/
-                std::string curldata="username=";
-                curldata.append(cusername);
-                curldata.append("-qr&password=");
-                curldata.append(md5pass);
+                ///std::string curldata="username=";
+               /// curldata.append(cusername);
+               /// curldata.append("-qr&password=");
+               /// curldata.append(md5pass);
 
-                 login_curl(curldata);
+                  username.append("-qr");
+                  login(username,md5pass);
 
             }
 
@@ -500,6 +525,7 @@ void login_process(udev_device *dev)
     /****************************************************************************************************/
 
 }
+
 /******************************************************************************************/
 int main(int argc, char *argv[]){
 
