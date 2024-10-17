@@ -489,9 +489,9 @@ void login_process(udev_device *dev)
                // system("systemctl restart lightdm.service");
 
                 /*****************şifre sormasın diye dosya oluşturuluyor************/
-                std::string yol="/home/"+username+"/.config/np";
-                std::ofstream o(yol.c_str());
-                o << "\n" << std::endl;
+               // std::string yol="/home/"+username+"/.config/np";
+               // std::ofstream o(yol.c_str());
+                //o << "\n" << std::endl;
 
                 /*******************************************************************/
                 /*std::string komut="/usr/bin/sshlogin ";
