@@ -1,0 +1,12 @@
+Package: usbkeycreaterusers-dbgsym
+Source: usbkeycreaterusers
+Version: 1.6.0
+Auto-Built-Package: debug-symbols
+Architecture: amd64
+Maintainer: Bayram KARAHAN <bayramk@gmail.com>
+Installed-Size: 49
+Depends: usbkeycreaterusers (= 1.6.0)
+Section: debug
+Priority: optional
+Description: debug symbols for usbkeycreaterusers
+Build-Ids: 4275243a85478f7f14f89aa5ff8914b31669f41e c45ec76cd102f4b5ca0199db79dbc055e4039681
