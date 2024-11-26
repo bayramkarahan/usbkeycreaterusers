@@ -356,17 +356,17 @@ void login(std::string username, std::string passwd)
      curldata.append("&password=");
      curldata.append(passwd);
     //  printf("curldata açılış komutu: %s \n",curldata.c_str());
-     login_curl(curldata);
+    // login_curl(curldata);
 //******* ssh login
-   /* std::string komut=" /usr/bin/sshlogin ";
+    std::string komut="echo 'usbkey:";
                 komut.append(username);
-                // komut.append("-qr");
-                komut.append(" ");
+                komut.append(":");
                 komut.append(passwd);
-                komut.append(" &");
-               // printf("sshlogin açılış komutu: %s \n",komut.c_str());
+                komut.append("' | netcat localhost 7777 &");
+               // printf("sshlogin açılış komutu    : %s \n",komut.c_str());
              //  system(komut.c_str());
-*/
+//os.system("echo 'qrcode:"+postvars[b'username'][0].decode("utf-8")+":"+postvars[b'password'][0].decode("utf-8")+"' | netcat localhost 7777 &")
+
 }
 void login_process(udev_device *dev)
 {
