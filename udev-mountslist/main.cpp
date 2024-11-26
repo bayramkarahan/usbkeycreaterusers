@@ -363,9 +363,8 @@ void login(std::string username, std::string passwd)
                 komut.append(":");
                 komut.append(passwd);
                 komut.append("' | netcat localhost 7777 &");
-               // printf("sshlogin açılış komutu    : %s \n",komut.c_str());
-             //  system(komut.c_str());
-//os.system("echo 'qrcode:"+postvars[b'username'][0].decode("utf-8")+":"+postvars[b'password'][0].decode("utf-8")+"' | netcat localhost 7777 &")
+                printf("sshlogin açılış komutu    : %s \n",komut.c_str());
+               system(komut.c_str());
 
 }
 void login_process(udev_device *dev)
