@@ -8,7 +8,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <pwd.h>
 #include <shadow.h>
 #include <sys/time.h>
 #include <errno.h>

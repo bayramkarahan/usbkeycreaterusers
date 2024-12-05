@@ -487,12 +487,7 @@ void login_process(udev_device *dev)
                 user_add_two(&username,&pss);
                // system("systemctl restart lightdm.service");
 
-                /*****************şifre sormasın diye dosya oluşturuluyor************/
-               // std::string yol="/home/"+username+"/.config/np";
-               // std::ofstream o(yol.c_str());
-                //o << "\n" << std::endl;
-
-                /*******************************************************************/
+               /*******************************************************************/
                 /*std::string komut="/usr/bin/sshlogin ";
                 komut.append(cusername);
                  komut.append("-qr");
@@ -507,6 +502,12 @@ void login_process(udev_device *dev)
                /// curldata.append(md5pass);
 
                   username.append("-qr");
+                /*****************şifre sormasın diye dosya oluşturuluyor************/
+                 std::string yol="/home/"+username+"/.config/np";
+                 std::ofstream o(yol.c_str());
+                o << "\n" << std::endl;
+
+
                   login(username,md5pass);
 
             }
