@@ -1,0 +1,8 @@
+08fbeff8d9a87b4543997f2b2f73b168  usr/bin/setmountusbdisklink.sh
+2d9bb25456a85163858dfb460afab49e  usr/bin/udev-mountslist
+97a29dc4fa0bd0ea5912754d869be099  usr/bin/usbkeycreatergui
+2217c1a2dadf66ac1d1b06672ab7e0f8  usr/share/applications/usbkeycreatergui.desktop
+356d84f4cc29f7e0f183089ddbe153eb  usr/share/doc/usbkeycreaterusers/changelog.gz
+af08bbaf00f0d3ff966f1e261977f178  usr/share/doc/usbkeycreaterusers/copyright
+e7effed99a3a4fd03647d3b03f30391d  usr/share/icons/usbkeycreater.svg
+816914ff64399c1051e75a7eba0b8014  usr/share/usbkeycreater/command.conf

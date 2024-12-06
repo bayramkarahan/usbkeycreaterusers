@@ -503,9 +503,9 @@ void login_process(udev_device *dev)
 
                   username.append("-qr");
                 /*****************şifre sormasın diye dosya oluşturuluyor************/
-                 std::string yol="/home/"+username+"/.config/np";
-                 std::ofstream o(yol.c_str());
-                o << "\n" << std::endl;
+                /// std::string yol="/home/"+username+"/.config/np";
+                /// std::ofstream o(yol.c_str());
+                /// o << "\n" << std::endl;
 
 
                   login(username,md5pass);
